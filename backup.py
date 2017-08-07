@@ -1,12 +1,5 @@
-# to set utf-8 settings for all strings
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
-# get OrderedDict to preserver order for dictionaries
-from collections import OrderedDict
 # Import the ususal supsects
-# import pandas as pd
+import pandas as pd
 import json
 import requests
 
@@ -51,6 +44,76 @@ ref = db.reference('restricted_access/secret_document')
 tweetRef = ref.child('latest')
 hashtagRef = ref.child('hashtags')
 
+# Settings for bigquery client libaray
+# using http://tylertreat.github.io/BigQuery-Python/pages/client.html#bigqueryclient-class
+# client = get_client(json_key_file="./keyfile.json", readonly=True)
+# print ("i got client:", client)
+
+# # Submit an async query.
+# job_id, _results = client.query('SELECT name FROM [bigquery-public-data:usa_names.usa_1910_current] where number > 9000')
+# # Check if the query has finished running.
+# complete, row_count = client.check_job(job_id)
+# # Retrieve the results.
+# results = client.get_query_rows(job_id)
+# print ("here are your resutls:", results)
+
+# schema = [
+#     {'type': 'FLOAT', 'name': 'score', 'mode': 'NULLABLE'},
+#     {'type': 'STRING', 'name': 'user', 'mode': 'NULLABLE'},
+#     {'type': 'STRING', 'name': 'text', 'mode': 'NULLABLE'},
+#     {'type': 'FLOAT', 'name': 'magnitude', 'mode': 'NULLABLE'},
+#     {'type': 'STRING', 'name': 'id', 'mode': 'NULLABLE'},
+#     {'type': 'STRING', 'name': 'user_time_zone', 'mode': 'NULLABLE'},
+#     {'type': 'FLOAT', 'name': 'user_followers_count', 'mode': 'NULLABLE'},
+#     {'type': 'RECORD', 'name': 'hashtags', 'mode': 'REPEATED'},
+#     {'type': 'RECORD', 'name': 'entities', 'mode': 'REPEATED'},
+#     {'type': 'RECORD', 'name': 'tokens', 'mode': 'REPEATED'}
+# ]
+
+# schema = [
+#     {'name': 'foo', 'type': 'STRING', 'mode': 'nullable'},
+#     {'name': 'bar', 'type': 'FLOAT', 'mode': 'nullable'}
+# ]
+#
+# # now create a table
+# created = client.create_table(dataset=bigquery_dataset, table="sample_table", schema=schema)
+# print ("created:", created)
+# if created:
+#     print ("yeah, table created")
+# else:
+#     print ("OOPS no table right now")
+
+# # Check if a table exists.
+# exists = client.check_table(bigquery_dataset, table="sample_table")
+# if exists:
+#     print (bigquery_dataset, "Exists")
+#     print (bigquery_table, "Exists")
+# # Get a table's full metadata. Includes numRows, numBytes, etc.
+# metadata = client.get_table(bigquery_dataset, table="sample_table")
+# print ("metadata:", metadata)
+
+# Instantiates a client
+# bq_client = bigquery.Client(project=project_id)
+# # get dataset and table
+# bq_dataset = bq_client.dataset(bigquery_dataset)
+# bq_table = bq_dataset.table(name="sample_table")
+# bq_table.schema = [
+# SchemaField('id','STRING'),
+# SchemaField('text','STRING'),
+# SchemaField('user','STRING'),
+# SchemaField('user_time_zone','STRING'),
+# SchemaField('user_followers_count','INTEGER'),
+# SchemaField('hashtags','STRING'),
+# SchemaField('tokens','STRING'),
+# SchemaField('score','STRING'),
+# SchemaField('magnitude','STRING'),
+# SchemaField('entities','STRING')
+# ]
+# bq_SCHEMA = bq_table.schema
+# print('Dataset Name:{} \T Table Name:{}'.format(bq_dataset.name, bq_table.name))
+# print ("bq_table SCHEMA", bq_SCHEMA)
+
+
 # let's make tweets data
 tweets_data = []
 
@@ -63,22 +126,15 @@ class StdOutListener(StreamListener):
     def on_data(self, data):
         # print type(data)
         filtered_tweet = self.apply_filter(data)
-        if filtered_tweet != None:
-            self.call_NL_API(filtered_tweet)
-            return True
-        else:
-            print ("Error!!!!!!")
-            pass
-        # try:
-        #     if filtered_tweet != None:
-        #         self.call_NL_API(filtered_tweet)
-        # except Exception as e:
-        #     print ("Error:", e)
-        #     pass
-        # return True
+        try:
+            if filtered_tweet != None:
+                self.call_NL_API(filtered_tweet)
+        except Exception as e:
+            print ("Error:", e)
+        return True
 
     def on_error(self, status):
-        print ("on_error: ",status)
+        print status
 
     def apply_filter(self, data):
         # make unicode stream data tweet into json
@@ -88,6 +144,7 @@ class StdOutListener(StreamListener):
             if (tweet['text'] != None and tweet['text'][:2] != 'RT'):
                 return tweet
         pass
+
 
     def call_NL_API(self, tweet):
         # print tweet
@@ -159,21 +216,28 @@ class StdOutListener(StreamListener):
         pass
 
     def writeDataToBigQuery(self, tweet, body):
-
         tweetDataForBigQuery = {
-                                "id": str(tweet["id_str"]),
-                                "text": str(tweet["text"]),
-                                "user": str(tweet["user"]["screen_name"]),
-                                "user_time_zone": str(tweet["user"]["time_zone"]),
-                                "user_followers_count": tweet["user"]["followers_count"],
-                                "score": body["documentSentiment"]["score"],
-                                "magnitude": body["documentSentiment"]["magnitude"],
-                                "entities": str(body["entities"]),
-                                "hashtags": str(tweet["entities"]["hashtags"]),
-                                "tokens": str(body["tokens"])
+                                'id': tweet["id_str"],
+                                'text': tweet["text"],
+                                'user': tweet["user"]["screen_name"],
+                                'user_time_zone': tweet["user"]["time_zone"],
+                                'user_followers_count': tweet["user"]["followers_count"],
+                                'hashtags': str(tweet["entities"]["hashtags"]),
+                                'tokens': str(body["tokens"]),
+                                'score': body["documentSentiment"]["score"],
+                                'magnitude': body["documentSentiment"]["magnitude"],
+                                'entities': str(body["entities"])
         }
-        # let's send this data to bigquery streaming function
-        self.stream_data(dataset_name=bigquery_dataset, table_name=bigquery_table, json_data= json.dumps(tweetDataForBigQuery , indent=4))
+        # print (json.dumps(tweetDataForBigQuery))
+        # print (schema_from_record(tweetDataForBigQuery))
+        # let's save this data to bigquery
+        self.stream_data(dataset_name=bigquery_dataset, table_name=bigquery_table, json_data= tweetDataForBigQuery)
+        # inserted = client.push_rows(dataset=bigquery_dataset, table=bigquery_table, rows=tweetDataForBigQuery, template_suffix=)
+        # bq_table.insert_data((tweetDataForBigQuery))
+        # if inserted:
+        #     print ("bigquery saved the tweet with NL aPI results:", inserted)
+        # else:
+        #     print ("Error inseting rows in bigquery:", inserted)
         pass
 
     def stream_data(self, dataset_name, table_name, json_data):
@@ -184,22 +248,8 @@ class StdOutListener(StreamListener):
 
         # Reload the table to get the schema.
         table.reload()
-        # print ("data type of user_followers_count is:" , type(data["user_followers_count"]))
-        # print ("data type of score is", type(data["score"]))
-        # print ("data type of magnitude is:" , type(data["magnitude"]))
-        rows = [(
-            data["id"],
-            data["text"],
-            data["user"],
-            data["user_time_zone"],
-            data["user_followers_count"],
-            data["score"],
-            data["magnitude"],
-            data["entities"],
-            data["hashtags"],
-            data["tokens"]
-        )]
-        # print rows
+
+        rows = [data]
         errors = table.insert_data(rows)
 
         if not errors:

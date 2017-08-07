@@ -1,0 +1,80 @@
+schema =
+[
+    {'fields':
+        [
+            {'fields': [
+                {'type': 'string', 'name': u'content', 'mode': 'nullable'},
+                {'type': 'integer', 'name': u'beginOffset', 'mode': 'nullable'}],
+                'type': 'record', 'name': u'text', 'mode': 'nullable'},
+            {'fields': [
+                {'type': 'integer', 'name': u'headTokenIndex', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'label', 'mode': 'nullable'}],
+                'type': 'record', 'name': u'dependencyEdge', 'mode': 'nullable'},
+            {'fields': [
+                {'type': 'string', 'name': u'case', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'reciprocity', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'mood', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'form', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'gender', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'number', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'person', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'tag', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'tense', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'aspect', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'proper', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'voice', 'mode': 'nullable'}],
+                'type': 'record', 'name': u'partOfSpeech', 'mode': 'nullable'},
+                {'type': 'string', 'name': u'lemma', 'mode': 'nullable'}
+        ],
+    'type': 'record', 'name': 'tokens', 'mode': 'repeated'},
+    {'fields': 
+        [
+            {'type': 'string', 'name': u'name', 'mode': 'nullable'},
+            {'fields':
+                [
+                    {'type': 'integer', 'name': u'magnitude', 'mode': 'nullable'},
+                    {'type': 'integer', 'name': u'score', 'mode': 'nullable'}
+                ],'type': 'record', 'name': u'sentiment', 'mode': 'nullable'
+            },
+            {'type': 'float', 'name': u'salience', 'mode': 'nullable'},
+            {
+                'fields':
+                 [
+                    {'fields':
+                        [
+                            {'type': 'string', 'name': u'content', 'mode': 'nullable'},
+                            {'type': 'integer', 'name': u'beginOffset', 'mode': 'nullable'}
+                        ], 'type': 'record', 'name': u'text', 'mode': 'nullable'
+                    },
+                        {'type': 'string', 'name': u'type', 'mode': 'nullable'},
+                        {'fields':
+                            [
+                                {'type': 'integer', 'name': u'magnitude', 'mode': 'nullable'},
+                                {'type': 'integer', 'name': u'score', 'mode': 'nullable'}
+                            ],
+                            'type': 'record', 'name': u'sentiment', 'mode': 'nullable'}
+                ],
+                'type': 'record', 'name': u'mentions', 'mode': 'repeated'
+            },
+            {'type': 'string', 'name': u'type', 'mode': 'nullable'},
+            {'fields':
+                [
+                ],
+                'type': 'record', 'name': u'metadata', 'mode': 'nullable'
+            }
+        ],
+    'type': 'record', 'name': 'entities', 'mode': 'repeated'},
+    {'type': 'integer', 'name': 'score', 'mode': 'nullable'},
+    {'type': 'string', 'name': 'user', 'mode': 'nullable'},
+    {'type': 'string', 'name': 'text', 'mode': 'nullable'},
+    {'type': 'integer', 'name': 'magnitude', 'mode': 'nullable'},
+    {'fields':
+        [
+            {'type': 'integer', 'name': u'indices', 'mode': 'repeated'},
+            {'type': 'string', 'name': u'text', 'mode': 'nullable'}
+        ],
+    'type': 'record', 'name': 'hashtags', 'mode': 'repeated'},
+    {'type': 'string', 'name': 'id', 'mode': 'nullable'},
+    {'type': 'string', 'name': 'user_time_zone', 'mode': 'nullable'},
+    {'type': 'integer', 'name': 'user_followers_count', 'mode': 'nullable'}
+]

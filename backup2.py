@@ -63,22 +63,15 @@ class StdOutListener(StreamListener):
     def on_data(self, data):
         # print type(data)
         filtered_tweet = self.apply_filter(data)
-        if filtered_tweet != None:
-            self.call_NL_API(filtered_tweet)
-            return True
-        else:
-            print ("Error!!!!!!")
-            pass
-        # try:
-        #     if filtered_tweet != None:
-        #         self.call_NL_API(filtered_tweet)
-        # except Exception as e:
-        #     print ("Error:", e)
-        #     pass
-        # return True
+        try:
+            if filtered_tweet != None:
+                self.call_NL_API(filtered_tweet)
+        except Exception as e:
+            print ("Error:", e)
+        return True
 
     def on_error(self, status):
-        print ("on_error: ",status)
+        print status
 
     def apply_filter(self, data):
         # make unicode stream data tweet into json
@@ -88,6 +81,7 @@ class StdOutListener(StreamListener):
             if (tweet['text'] != None and tweet['text'][:2] != 'RT'):
                 return tweet
         pass
+
 
     def call_NL_API(self, tweet):
         # print tweet
@@ -160,20 +154,37 @@ class StdOutListener(StreamListener):
 
     def writeDataToBigQuery(self, tweet, body):
 
+        # tweetDataForBigQuery = OrderedDict([
+        # ("id", str(tweet["id_str"])),
+        # ("text", str(tweet["text"])),
+        # ("user", str(tweet["user"]["screen_name"])),
+        # ("user_time_zone", str(tweet["user"]["time_zone"])),
+        # ("user_followers_count", str(tweet["user"]["followers_count"])),
+        # ("score", str(body["documentSentiment"]["score"])),
+        # ("magnitude", str(body["documentSentiment"]["magnitude"]))
+        # ])
+
         tweetDataForBigQuery = {
                                 "id": str(tweet["id_str"]),
                                 "text": str(tweet["text"]),
                                 "user": str(tweet["user"]["screen_name"]),
                                 "user_time_zone": str(tweet["user"]["time_zone"]),
-                                "user_followers_count": tweet["user"]["followers_count"],
-                                "score": body["documentSentiment"]["score"],
-                                "magnitude": body["documentSentiment"]["magnitude"],
-                                "entities": str(body["entities"]),
-                                "hashtags": str(tweet["entities"]["hashtags"]),
-                                "tokens": str(body["tokens"])
+                                "user_followers_count": str(tweet["user"]["followers_count"]),
+                                "score": str(body["documentSentiment"]["score"]),
+                                "magnitude": str(body["documentSentiment"]["magnitude"])
+                                # 'entities': json.dumps(str(body["entities"])),
+                                # 'hashtags': json.dumps(str(tweet["entities"]["hashtags"])),
+                                # 'tokens': json.dumps(str(body["tokens"]))
         }
-        # let's send this data to bigquery streaming function
-        self.stream_data(dataset_name=bigquery_dataset, table_name=bigquery_table, json_data= json.dumps(tweetDataForBigQuery , indent=4))
+        # print (json.dumps(tweetDataForBigQuery , indent=4))
+        # print (schema_from_record(tweetDataForBigQuery))
+        # let's save this data to bigquery
+        self.stream_data(dataset_name=bigquery_dataset, table_name=bigquery_table, json_data= json.dumps(tweetDataForBigQuery , indent=4))        # inserted = client.push_rows(dataset=bigquery_dataset, table=bigquery_table, rows=tweetDataForBigQuery, template_suffix=)
+        # bq_table.insert_data((tweetDataForBigQuery))
+        # if inserted:
+        #     print ("bigquery saved the tweet with NL aPI results:", inserted)
+        # else:
+        #     print ("Error inseting rows in bigquery:", inserted)
         pass
 
     def stream_data(self, dataset_name, table_name, json_data):
@@ -184,9 +195,6 @@ class StdOutListener(StreamListener):
 
         # Reload the table to get the schema.
         table.reload()
-        # print ("data type of user_followers_count is:" , type(data["user_followers_count"]))
-        # print ("data type of score is", type(data["score"]))
-        # print ("data type of magnitude is:" , type(data["magnitude"]))
         rows = [(
             data["id"],
             data["text"],
@@ -194,12 +202,9 @@ class StdOutListener(StreamListener):
             data["user_time_zone"],
             data["user_followers_count"],
             data["score"],
-            data["magnitude"],
-            data["entities"],
-            data["hashtags"],
-            data["tokens"]
+            data["magnitude"]
         )]
-        # print rows
+        print rows
         errors = table.insert_data(rows)
 
         if not errors:

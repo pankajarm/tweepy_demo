@@ -1,0 +1,10 @@
+{
+	"twitter_consumer_key": "rNnMlgGQMFZUD3qrj2AMAIvfg",
+	"twitter_consumer_secret": "KXhqN9qlDX1OLPaAQje5BprkXwu3zzzqwYqvcFyDvJv1t5dfTi",
+	"twitter_access_key": "736415964175142912-SbLm3hq6g8bh4QC1FXGMsWP2cYIvgdT",
+	"twitter_access_secret": "hBCoqipYCOa7offXfZKIutAktmZ0UJF5oSkWQjyyXHZL2",
+	"project_id": "twitter-streaming-154fa",
+	"bigquery_dataset": "twitter_handles",
+	"bigquery_table": "ai_dl_ml",
+	"cloud_api_key": "AIzaSyCtExzo8spyfnaSmh8e9UueG2CP8tLzNZw"
+}
