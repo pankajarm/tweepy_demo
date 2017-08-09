@@ -38,7 +38,7 @@ cloud_api_key = "AIzaSyCtExzo8spyfnaSmh8e9UueG2CP8tLzNZw"
 project_id = "twitter-streaming-154fa"
 # variale that contain Big Query DataSet and Table name
 bigquery_dataset = "twitter_handles"
-bigquery_table ="ai_dl_ml"
+bigquery_table ="3_ai_dl_ml"
 
 # Settings for Firebase
 cred = credentials.Certificate("./keyfile.json")
@@ -61,33 +61,36 @@ language_client = language.Client()
 class StdOutListener(StreamListener):
 
     def on_data(self, data):
-        # print type(data)
-        filtered_tweet = self.apply_filter(data)
-        if filtered_tweet != None:
-            self.call_NL_API(filtered_tweet)
-            return True
-        else:
-            print ("Error!!!!!!")
+        # let's get filtered twee first
+        try:
+            filtered_tweet = self.apply_filter(data)
+        except Exception as e:
+            print ("Error getting data", e)
             pass
-        # try:
-        #     if filtered_tweet != None:
-        #         self.call_NL_API(filtered_tweet)
-        # except Exception as e:
-        #     print ("Error:", e)
-        #     pass
-        # return True
+
+        # now use filtered tweet to call NL_API
+        try:
+            if filtered_tweet != None:
+                self.call_NL_API(filtered_tweet)
+        except Exception as e:
+            print ("Error getting NL_API resutls:", e)
+            pass
+        return True
 
     def on_error(self, status):
         print ("on_error: ",status)
 
     def apply_filter(self, data):
         # make unicode stream data tweet into json
-        tweet = json.loads(data)
-        if (tweet['lang'] == 'en'):
-            #  ((event.text != undefined) && (event.text.substring(0,2) != 'RT')
-            if (tweet['text'] != None and tweet['text'][:2] != 'RT'):
-                return tweet
-        pass
+        try:
+            tweet = json.loads(data)
+            if tweet['lang'] and (tweet['lang'] == 'en'):
+                #  ((event.text != undefined) && (event.text.substring(0,2) != 'RT')
+                if (tweet['text'] != None and tweet['text'][:2] != 'RT'):
+                    return tweet
+        except Exception as e:
+            print ("Error getting tweet['lang']", e)
+            pass
 
     def call_NL_API(self, tweet):
         # print tweet
@@ -146,10 +149,10 @@ class StdOutListener(StreamListener):
                                 'user': tweet["user"]["screen_name"],
                                 'user_time_zone': tweet["user"]["time_zone"],
                                 'user_followers_count': tweet["user"]["followers_count"],
-                                'hashtags': tweet["entities"]["hashtags"],
-                                'tokens': body["tokens"],
                                 'score': body["documentSentiment"]["score"],
                                 'magnitude': body["documentSentiment"]["magnitude"],
+                                'hashtags': tweet["entities"]["hashtags"],
+                                'tokens': body["tokens"],
                                 'entities': body["entities"]
         }
         # print tweetDataForFirebase
@@ -161,18 +164,20 @@ class StdOutListener(StreamListener):
     def writeDataToBigQuery(self, tweet, body):
 
         tweetDataForBigQuery = {
-                                "id": str(tweet["id_str"]),
-                                "text": str(tweet["text"]),
-                                "user": str(tweet["user"]["screen_name"]),
-                                "user_time_zone": str(tweet["user"]["time_zone"]),
+                                "id": tweet["id_str"],
+                                "text": tweet["text"],
+                                "user": tweet["user"]["screen_name"],
+                                "user_time_zone": tweet["user"]["time_zone"],
                                 "user_followers_count": tweet["user"]["followers_count"],
                                 "score": body["documentSentiment"]["score"],
                                 "magnitude": body["documentSentiment"]["magnitude"],
-                                "entities": str(body["entities"]),
-                                "hashtags": str(tweet["entities"]["hashtags"]),
-                                "tokens": str(body["tokens"])
+                                "hashtags": tweet["entities"]["hashtags"],
+                                "tokens": body["tokens"],
+                                "entities": body["entities"]
         }
         # let's send this data to bigquery streaming function
+        # print tweetDataForBigQuery
+        # print json.dumps(tweetDataForBigQuery , indent=4)
         self.stream_data(dataset_name=bigquery_dataset, table_name=bigquery_table, json_data= json.dumps(tweetDataForBigQuery , indent=4))
         pass
 
@@ -195,9 +200,9 @@ class StdOutListener(StreamListener):
             data["user_followers_count"],
             data["score"],
             data["magnitude"],
-            data["entities"],
-            data["hashtags"],
-            data["tokens"]
+            json.dumps(data["hashtags"] , indent=4),
+            json.dumps(data["tokens"] , indent=4),
+            json.dumps(data["entities"] , indent=4)
         )]
         # print rows
         errors = table.insert_data(rows)
@@ -205,9 +210,17 @@ class StdOutListener(StreamListener):
         if not errors:
             print('Loaded 1 row into {}:{}'.format(dataset_name, table_name))
         else:
-            print('Errors:')
-            print(errors)
+            print('Errors: while table.insert_data(rows)', errors)
 
+    # def to_str(data):
+    #     if isinstance(data, basestring):
+    #         return str(data)
+    #     elif isinstance(data, collections.Mapping):
+    #         return dict(map(to_str, data.iteritems()))
+    #     elif isinstance(data, collections.Iterable):
+    #         return type(data)(map(to_str, data))
+    #     else:
+    #         return data
 
 
 # Class StdOutListener Ends
@@ -218,11 +231,14 @@ if __name__ == '__main__':
     # firebase_admin.initialize_app(cred)
 
     #This handles Twitter authetification and the connection to Twitter Streaming API
-    l = StdOutListener()
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
-    stream = Stream(auth, l)
-
-    #This line filter Twitter Streams to capture data by the keywords:
-    # 'ai,artificial intelligence,deep learning,deepmind,machine learning
-    stream.filter(track=['ai,artificial intelligence,deep learning,deepmind,machine learning'])
+    while True:
+        try:
+            stream = Stream(auth, StdOutListener())
+            #This line filter Twitter Streams to capture data by the keywords:
+            # 'ai,artificial intelligence,deep learning,deepmind,machine learning
+            stream.filter(track=['ai, artificial intelligence, deep learning, deepmind, machine learning'])
+        except Exception as e:
+            print ("Error getting stream tweet", e)
+            pass

@@ -2,22 +2,81 @@ id:STRING,
 text:STRING,
 user:STRING,
 user_time_zone:STRING,
-user_followers_count:STRING,
-hashtags:STRING,
-tokens:STRING,
-score:STRING,
-magnitude:STRING,
-entities:STRING
-
-
-
-id:STRING,
-text:STRING,
-user:STRING,
-user_time_zone:STRING,
 user_followers_count:INTEGER,
 score:FLOAT,
 magnitude:FLOAT,
-entities:STRING,
 hashtags:STRING,
-tokens:STRING
+tokens:STRING,
+entities:STRING
+
+
+[
+    {
+        "name": "id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "text",
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "user",
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "user_time_zone",
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "user_followers_count",
+        "type": "INTEGER",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "score",
+        "type": "FLOAT",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "magnitude",
+        "type": "FLOAT",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "hashtags",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+                    {"name":"indices", "type":"STRING"},
+                    {"name":"text", "type":"STRING"}
+                  ]
+    },
+    {
+        "name": "tokens",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+                    {"name":"dependencyEdge", "type":"STRING"},
+                    {"name":"text", "type":"STRING"},
+                    {"name":"coord", "type":"RECORD",
+                          "fields": [
+                                      {"name":"lon", "type":"FLOAT"},
+                                      {"name":"lat", "type":"FLOAT"}
+                                    ]
+                    }
+                  ]
+    },
+    {
+        "name": "entities",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+                    {"name":"indices", "type":"STRING"},
+                    {"name":"text", "type":"STRING"}
+                  ]
+    }
+]
