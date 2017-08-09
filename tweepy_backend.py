@@ -27,18 +27,22 @@ from firebase_admin import db
 
 
 #Variables that contains the user credentials to access Twitter API
-access_token = "736415964175142912-NE1KtKJM0I0gNBUpz1a6kgbD1J7i072"
-access_token_secret = "L30sEYBK1a4qr44UrhIwH8d78R6gwepDXAheVr6irUUKa"
-consumer_key = "OSgkiY847Hj52aR2iMmIbhFyL"
-consumer_secret = "rN2hjF7bbDZ1JYAdCr3LVAyvPhzQflDWvG6ezR9RQMvz5UKfIq"
+# ADD YOUR TWITTER ACCESS TOKEN KEY AND SECRET
+access_token = ""
+access_token_secret = ""
+consumer_key = ""
+consumer_secret = ""
 
+# ADD YOUR GOOGLE CLOUD ML API KEY, BIGQUERY DATASET AND TABLE NAME FROM GOOGLE CLOUD CONSOLE
 # variable that contain Google NL API Key
-cloud_api_key = "AIzaSyCtExzo8spyfnaSmh8e9UueG2CP8tLzNZw"
-# variable that contain Firebase project id
-project_id = "twitter-streaming-154fa"
+cloud_api_key = ""
 # variale that contain Big Query DataSet and Table name
-bigquery_dataset = "twitter_handles"
-bigquery_table ="3_ai_dl_ml"
+bigquery_dataset = ""
+bigquery_table = ""
+
+ # ADD YOUR FIREBASE PROJECT ID FROM FIREBASE CONSOLE
+# variable that contain Firebase project id
+project_id = ""
 
 # Settings for Firebase
 cred = credentials.Certificate("./keyfile.json")
@@ -128,8 +132,6 @@ class StdOutListener(StreamListener):
                     }
 
         # now make the final request.post call with options as data
-        # print textUrl
-        # print json.dumps(requestBody)
         # Google NL annotateText REST API v1beta2 accepts JSON-Encoded POST/PATCH data
         req = requests.post(textUrl, data=json.dumps(requestBody))
 
@@ -176,7 +178,6 @@ class StdOutListener(StreamListener):
                                 "entities": body["entities"]
         }
         # let's send this data to bigquery streaming function
-        # print tweetDataForBigQuery
         # print json.dumps(tweetDataForBigQuery , indent=4)
         self.stream_data(dataset_name=bigquery_dataset, table_name=bigquery_table, json_data= json.dumps(tweetDataForBigQuery , indent=4))
         pass
@@ -189,9 +190,7 @@ class StdOutListener(StreamListener):
 
         # Reload the table to get the schema.
         table.reload()
-        # print ("data type of user_followers_count is:" , type(data["user_followers_count"]))
-        # print ("data type of score is", type(data["score"]))
-        # print ("data type of magnitude is:" , type(data["magnitude"]))
+
         rows = [(
             data["id"],
             data["text"],
@@ -211,16 +210,6 @@ class StdOutListener(StreamListener):
             print('Loaded 1 row into {}:{}'.format(dataset_name, table_name))
         else:
             print('Errors: while table.insert_data(rows)', errors)
-
-    # def to_str(data):
-    #     if isinstance(data, basestring):
-    #         return str(data)
-    #     elif isinstance(data, collections.Mapping):
-    #         return dict(map(to_str, data.iteritems()))
-    #     elif isinstance(data, collections.Iterable):
-    #         return type(data)(map(to_str, data))
-    #     else:
-    #         return data
 
 
 # Class StdOutListener Ends
